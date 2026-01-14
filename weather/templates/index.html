@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>東京の天気予報</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="main-section">
+            <h1>東京の天気</h1>
+            
+            {% if error %}
+                <div class="error">
+                    <p>⚠️ {{ error }}</p>
+                </div>
+            {% else %}
+                <div class="weather-card">
+                    <div class="time-section">
+                        <div class="time-label">現在の時刻</div>
+                        <div class="time-display" id="current-time">{{ current_time }}</div>
+                    </div>
+                    <div class="city-time-header">
+                        <div class="date-section">
+                            <div class="date-label">今日の日付</div>
+                            <div class="date-display">{{ current_date }}</div>
+                        </div>
+                        <h2>{{ weather.city }}</h2>
+                    </div>
+                    
+                    <div class="weather-main">
+                        <div class="temperature">
+                            <span class="temp-value">{{ weather.temperature }}</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                        <div class="weather-description">
+                            <p class="weather-type">{{ weather.description }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="weather-details">
+                        <div class="detail-item">
+                            <span class="label">湿度</span>
+                            <span class="value">{{ weather.humidity }}%</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">体感温度</span>
+                            <span class="value">{{ weather.feels_like }}°C</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">日の出</span>
+                            <span class="value">{{ weather.sunrise }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">日の入り</span>
+                            <span class="value">{{ weather.sunset }}</span>
+                        </div>
+                    </div>
+
+                    {% if weather.uv_index is not none or weather.air_quality %}
+                    <div class="additional-info-container">
+                        {% if weather.uv_index is not none %}
+                        <div class="additional-info">
+                            <h4>紫外線指数</h4>
+                            <div class="uv-info">
+                                <span class="uv-value">{{ weather.uv_index }}</span>
+                                <span class="uv-label">
+                                    {% if weather.uv_index < 3 %}低
+                                    {% elif weather.uv_index < 6 %}中程度
+                                    {% elif weather.uv_index < 8 %}高
+                                    {% elif weather.uv_index < 11 %}非常に高い
+                                    {% else %}極端に高い
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if weather.air_quality %}
+                        <div class="additional-info">
+                            <h4>空気品質</h4>
+                            <div class="air-quality-box">
+                                <div class="air-quality-content">
+                                    <span class="air-quality-label">{{ weather.air_quality.label }}</span>
+                                    {% if weather.pm25 is not none %}
+                                    <div class="pm-info">
+                                        <span>PM2.5: {{ weather.pm25 }} μg/m³</span>
+                                        <span>PM10: {{ weather.pm10 }} μg/m³</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="sub-section">
+            {% if forecast and not error %}
+            <div class="forecast-section">
+                <h3>7日間天気予報</h3>
+                <div class="forecast-grid">
+                    {% for day in forecast %}
+                    <div class="forecast-card">
+                        <div class="forecast-date">{{ day.date }}</div>
+                        <div class="forecast-temp">
+                            <span class="temp-max">{{ day.temp_max }}°</span>
+                            <span class="temp-min">{{ day.temp_min }}°</span>
+                        </div>
+                        <div class="forecast-description">{{ day.description }}</div>
+                        <div class="forecast-humidity">湿度: {{ day.humidity }}%</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <footer>
+            <p>データ提供: OpenWeatherMap API</p>
+        </footer>
+    </div>
+
+    <script>
+        // 現在時刻をリアルタイムで更新
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('current-time').textContent = timeString;
+        }
+        
+        // 初期表示と1秒ごとに更新
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
